@@ -10,6 +10,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/aegis_flood_data/AEGISDataset_SJOIN100yr.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/aegis_flood_data/AEGISDataset_SJOIN_merged.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/graphs/nodes.csv">
           <value>
             <Attribute>
