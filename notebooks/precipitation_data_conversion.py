@@ -44,7 +44,7 @@ def nc4_to_dataframe(file_path, base_length=None):
     return df, base_length
 
 # Path to the folder where your nc4 files are located
-folder_path = r'C:\Users\ASUS\DataspellProjects\jeepney_rerouting\precipitation_data\\'
+folder_path = r'C:\Users\Jed Padro\DataspellProjects\JeepneyRerouting\nasa_data\precipitation_data\\'
 
 # Generate the list of file paths for each day in the range
 from datetime import datetime, timedelta
@@ -73,7 +73,7 @@ for file in file_paths:
 combined_df = pd.concat(dataframes)
 
 # Save the combined DataFrame to a CSV file
-output_csv_path = os.path.join(folder_path, 'combined_data.csv')
+output_csv_path = os.path.join(folder_path, 'combined_precipitation_data.csv')
 combined_df.to_csv(output_csv_path, index=False)
 
 print(f"Conversion complete. CSV saved as '{output_csv_path}'.")
