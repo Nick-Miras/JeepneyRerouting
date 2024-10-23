@@ -499,7 +499,7 @@ def monte_carlo_tree_search(G, source, target, weight="weight", iterations=1000,
     return path, best_cost
 
 
-def yen_k_shortest_paths(G, source, target, K, weight="weight"):
+def yen_k_shortest_paths(G, source, target, K=3, weight="weight"):
     """
     Yen’s K-Shortest Paths Algorithm to find the K shortest paths in a weighted graph.
 
