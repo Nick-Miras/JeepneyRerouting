@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/aegis_flood_data/AEGISDataset_SJOIN_merged_cleaned.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/graphs/nodes.csv">
           <value>
             <Attribute>
