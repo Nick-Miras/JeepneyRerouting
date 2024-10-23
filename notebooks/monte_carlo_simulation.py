@@ -1,116 +1,116 @@
 import graph_search_algorithm_compilation
+import matplotlib.pyplot as plt
 import networkx as nx
-import geopandas as gpd
-import pandas as pd
 import random
-import heapq
-import math
+import time
 
-# Step 1: Import the graph from 'metro_manila_process_osm_data.ipynb'
-def load_graph_from_notebook(notebook_path):
-    import nbformat
-    from nbconvert import PythonExporter
+# Monte Carlo Simulation Parameters
+iterations = 1000  # Number of Monte Carlo iterations
+graph_size = 50    # Number of nodes in the graph
+flooded_road_probability = 0.1  # Probability that a road gets flooded
 
-    with open(notebook_path, 'r', encoding='utf-8') as f:
-        notebook_content = nbformat.read(f, as_version=4)
+# Generate a random weighted graph for the simulation
+def generate_random_graph(num_nodes, prob=0.1, max_weight=10):
+    G = nx.gnp_random_graph(num_nodes, prob, directed=False)
+    for (u, v) in G.edges():
+        G.edges[u, v]['weight'] = random.randint(1, max_weight)
+    return G
 
-    exporter = PythonExporter()
-    code, _ = exporter.from_notebook_node(notebook_content)
-
-    exec_globals = {}
-    exec(code, exec_globals)
-
-    return exec_globals.get("G")
-
-# Load Metro Manila graph from 'metro_manila_process_osm_data.ipynb'
-G = load_graph_from_notebook('metro_manila_process_osm_data.ipynb')
-
-# Step 2: Import the precipitation data
-def load_precipitation_data():
-    return pd.read_csv(r'C:\Users\Jed Padro\DataspellProjects\JeepneyRerouting\nasa_data\precipitation_data\combined_precipitation_data.csv')
-
-# Load precipitation data
-precipitation_data = load_precipitation_data()
-
-# Step 3: Simulate flooding conditions based on precipitation data
-def simulate_flood_conditions(G, precipitation_data, threshold=50):
-    """
-    Randomly simulates flooding by removing edges from the graph based on precipitation data.
-    Roads (edges) are considered flooded if precipitation exceeds a certain threshold.
-    """
+# Apply flood conditions to the graph
+def apply_flood_conditions(G, flood_probability):
     flooded_edges = []
-
-    for u, v, data in G.edges(data=True):
-        if random.choice(precipitation_data['precipitation']) > threshold:
+    for u, v in G.edges():
+        if random.random() < flood_probability:
             flooded_edges.append((u, v))
-            # Mark the edge as flooded by removing it
-            G.remove_edge(u, v)
+            G.remove_edge(u, v)  # Remove the flooded edges from the graph
+    return G
 
-    return flooded_edges
+# Function to evaluate algorithm performance in each iteration
+def evaluate_algorithm(algorithm_func, G, source, target):
+    start_time = time.time()
+    try:
+        # Call the algorithm with (G, source, target, weight)
+        path = algorithm_func(G, source, target, weight='weight')
+        duration = time.time() - start_time
+        if path is None:
+            return float('inf'), None  # Infinite cost for no path found
+        return duration, path  # Return computation time and the path
+    except Exception as e:
+        return float('inf'), None  # Infinite cost for errors
 
-# Step 4: Monte Carlo Simulation to choose the best algorithm
-def monte_carlo_simulation(G, source, target, precipitation_data, iterations=1000, flood_threshold=50):
-    """
-    Monte Carlo simulation that selects an optimized algorithm for rerouting
-    based on the number of flooded roads using a variety of algorithms.
-    """
-    # All algorithms included - here we reference the functions, not call them yet
+# Monte Carlo Simulation: Run all algorithms simultaneously on the same graph and evaluate performance
+def monte_carlo_simulation(num_iterations, graph_size, flood_probability):
     algorithms = {
         "Dijkstra": graph_search_algorithm_compilation.dijkstra_search,
         "Floyd-Warshall": graph_search_algorithm_compilation.floyd_warshall_search,
         "Bellman-Ford": graph_search_algorithm_compilation.bellman_ford_search,
-        "Bidirectional Search": graph_search_algorithm_compilation.bidirectional_search,
-        "Dynamic Shortest Path": graph_search_algorithm_compilation.dynamic_shortest_path,
+        "Bidirectional": graph_search_algorithm_compilation.bidirectional_search,
+        "Dynamic": graph_search_algorithm_compilation.dynamic_shortest_path,
         "D* Lite": graph_search_algorithm_compilation.d_star_lite,
         "A* Search": graph_search_algorithm_compilation.a_star_search,
-        "Monte Carlo Tree Search": graph_search_algorithm_compilation.monte_carlo_tree_search,
+        "MCTS": graph_search_algorithm_compilation.monte_carlo_tree_search,
         "Yen's K-Shortest Paths": graph_search_algorithm_compilation.yen_k_shortest_paths,
-        "Ant Colony Optimization": graph_search_algorithm_compilation.ant_colony_optimization,
+        "ACO": graph_search_algorithm_compilation.ant_colony_optimization,
     }
 
-    algorithm_selection_count = {name: 0 for name in algorithms.keys()}
+    algorithm_performance = {name: [] for name in algorithms.keys()}  # Track performance for each algorithm
 
-    for _ in range(iterations):
-        # Create a deep copy of the graph to avoid modifying the original graph permanently
-        G_copy = G.copy()
+    G = generate_random_graph(graph_size)
+    while not nx.is_connected(G):
+        G = generate_random_graph(graph_size)
+    flooded_edges = apply_flood_conditions(G, flood_probability)
+    source = random.choice(list(G.nodes()))
+    target = random.choice(list(G.nodes()))
 
-        # Simulate flooding conditions
-        flooded_edges = simulate_flood_conditions(G_copy, precipitation_data, flood_threshold)
+    # Ensure source and target are not the same
+    while source == target:
+        target = random.choice(list(G.nodes()))
 
-        # Severe flooding: Choose dynamic algorithms or Monte Carlo Tree Search
-        if len(flooded_edges) > len(G.edges()) * 0.2:
-            selected_algorithm_name = random.choice(["D* Lite", "Monte Carlo Tree Search", "Dynamic Shortest Path"])
+    # Step 4: Evaluate all algorithms over the same graph, flooded conditions, and source/target
+    for _ in range(num_iterations):
+        for algorithm_name, algorithm_func in algorithms.items():
+            G_copy = G.copy()  # Copy the graph for each algorithm to avoid modifications
+            duration, path = evaluate_algorithm(algorithm_func, G_copy, source, target)
+            algorithm_performance[algorithm_name].append((duration, path))
 
-        # Moderate flooding: Use traditional pathfinding with recalculations (e.g., Dijkstra, Bellman-Ford)
-        elif len(flooded_edges) > len(G.edges()) * 0.1:
-            selected_algorithm_name = random.choice(["Dijkstra", "Bellman-Ford", "Ant Colony Optimization", "A* Search"])
+    return algorithm_performance
 
-        # Light flooding: Consider faster algorithms for small updates (e.g., Bidirectional Search, Floyd-Warshall)
-        else:
-            selected_algorithm_name = random.choice(["Bidirectional Search", "Floyd-Warshall", "Yen's K-Shortest Paths"])
+# Choose the best algorithm based on the performance and return the best result
+def choose_best_algorithm(algorithm_performance):
+    # Calculate average performance for each algorithm
+    avg_performance = {
+        algo: sum(duration for duration, _ in times) / len(times)
+        for algo, times in algorithm_performance.items()
+    }
 
-        # Run the selected algorithm on the copied graph
-        selected_algorithm = algorithms[selected_algorithm_name]
-        try:
-            # Execute the selected algorithm on the graph
-            selected_algorithm(G_copy, source, target, weight='weight')
-        except Exception as e:
-            print(f"Error running {selected_algorithm_name}: {e}")
-            continue  # If an error occurs, skip this iteration
+    # Select the algorithm with the lowest average time
+    best_algorithm = min(avg_performance, key=avg_performance.get)
 
-        # Track how many times each algorithm is selected
-        algorithm_selection_count[selected_algorithm_name] += 1
+    # Output the performance of all algorithms
+    print(f"Best algorithm: {best_algorithm}")
+    for algo, avg_time in avg_performance.items():
+        print(f"{algo}: {avg_time:.4f} seconds (average)")
 
-    return algorithm_selection_count
+    # Return the best algorithm and its last run output (path)
+    best_run = algorithm_performance[best_algorithm][-1]  # Get the last run result
+    return best_algorithm, best_run[1]  # Return the algorithm name and its path
 
-# Define source and target nodes for the graph search algorithms
-source = 'start_node'  # Replace with an actual node ID from the graph
-target = 'end_node'    # Replace with an actual node ID from the graph
+# Run the simulation
+algorithm_performance = monte_carlo_simulation(iterations, graph_size, flooded_road_probability)
 
-# Run the Monte Carlo Simulation
-simulation_results = monte_carlo_simulation(G, source, target, precipitation_data, iterations=1000)
+# Choose the best algorithm based on performance
+best_algorithm, best_path = choose_best_algorithm(algorithm_performance)
 
-# Display results
-print("Algorithm selection results after Monte Carlo simulation:")
-for algo, count in simulation_results.items():
-    print(f"{algo}: {count} times selected")
+# Display the best algorithm's path
+print(f"Best path found by {best_algorithm}: {best_path}")
+
+# Plot the average performance
+average_performance = {
+    algo: sum(duration for duration, _ in times) / len(times)
+    for algo, times in algorithm_performance.items()
+}
+plt.bar(average_performance.keys(), average_performance.values())
+plt.title("Average Algorithm Performance (Lower is Better)")
+plt.xlabel("Algorithm")
+plt.ylabel("Average Time (s) / Infinite Cost")
+plt.show()
