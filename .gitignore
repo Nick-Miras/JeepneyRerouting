@@ -259,3 +259,4 @@ cache/
 # noah data
 /noah_data/100yr/100yr.zip
 /noah_data/100yr/Cebu_Flood_100year.shp
+!/graphs/geopackage/2024-10-23_16-29-57 graph.gpkg
