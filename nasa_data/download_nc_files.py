@@ -3,7 +3,7 @@ import requests
 import os
 
 
-NC_FILE_LIST = 'nasa_data/subset_GPM_3IMERGDF_07_20241013_074527_.txt'
+NC_FILE_LIST = 'nasa_data/subset_GPM_3IMERGDF_07_20241021_040313_.txt'
 DOWNLOAD_DIR = 'nasa_data/precipitation_data'
 
 with open (NC_FILE_LIST, 'r') as f:
@@ -18,13 +18,18 @@ for file_link in nc_files:
     month = date[4:6]
     day = date[6:8]
     file_name = f'{year}-{month}-{day}.nc4'
+    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+
+    # verify if file already exists
+    if os.path.exists(file_path):
+        print(f"File {file_name} already exists. Skipping download.")
+        continue
 
     with requests.Session() as s:
         s.auth = (os.getenv('NASA_USER_NAME'), os.getenv('NASA_PASSWORD'))
         
         try:
             response = s.get(s.request('get', file_link).url, stream=True)
-            file_path = os.path.join(DOWNLOAD_DIR, file_name)
             if response.status_code == 200:
                 with open(file_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
