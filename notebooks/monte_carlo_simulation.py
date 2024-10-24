@@ -5,7 +5,11 @@ import networkx as nx
 import random
 import heapq
 import time
+from dask.distributed import Client
 
+if 'client' in globals():
+    client.close()
+client = Client()
 
 # Monte Carlo Simulation Parameters
 iterations = 2  # Number of Monte Carlo iterations
@@ -133,3 +137,7 @@ plt.title("Average Algorithm Performance (Lower is Better)")
 plt.xlabel("Algorithm")
 plt.ylabel("Average Time (s) / Infinite Cost")
 plt.show()
+
+import datetime
+date = datetime.datetime.now(datetime.UTC)
+plt.save(f'monte-carlo-results {date}.jpg')
