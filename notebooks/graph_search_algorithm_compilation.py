@@ -1,9 +1,12 @@
+from joblib import Parallel, delayed
 from collections import deque
 import networkx as nx
 import random
 import heapq
 import math
 
+
+# 1
 def dijkstra_search(G, source, target, weight="weight"):
     """
     Dijkstra's Algorithm to find the shortest path between two nodes in a weighted graph.
@@ -50,6 +53,7 @@ def dijkstra_search(G, source, target, weight="weight"):
     return None
 
 
+# 2
 def floyd_warshall_search(G, source, target, weight="weight"):
     """
     Floyd-Warshall algorithm to find the shortest path between two nodes in a weighted graph.
@@ -101,6 +105,7 @@ def floyd_warshall_search(G, source, target, weight="weight"):
     return path
 
 
+# 3
 def bellman_ford_search(G, source, target, weight="weight"):
     """
     Bellman-Ford Algorithm to find the shortest path from source to target in a weighted graph.
@@ -153,6 +158,7 @@ def bellman_ford_search(G, source, target, weight="weight"):
     return path
 
 
+# 4
 def bidirectional_search(G, source, target, weight="weight"):
     """
     Bidirectional Search to find the shortest path from source to target in an unweighted graph.
@@ -213,6 +219,7 @@ def bidirectional_search(G, source, target, weight="weight"):
     return None
 
 
+# 5
 def dynamic_shortest_path(G, source, target, weight="weight", updated_edges=None):
     """
     Dynamic Shortest Path Algorithm in a weighted graph.
@@ -276,6 +283,7 @@ def dynamic_shortest_path(G, source, target, weight="weight", updated_edges=None
         return None
 
 
+# 6
 def d_star_lite(G, source, target, weight="weight", heuristic=lambda u, v: 0):
     """
     D* Lite Algorithm for dynamic path planning in a weighted graph.
@@ -341,6 +349,7 @@ def d_star_lite(G, source, target, weight="weight", heuristic=lambda u, v: 0):
     return path
 
 
+# 7
 def a_star_search(G, source, target, weight="weight"):
     """
     A* Search Algorithm for finding the shortest path in a weighted graph.
@@ -398,6 +407,7 @@ def a_star_search(G, source, target, weight="weight"):
     return None, float('inf')  # Return None if no path is found
 
 
+# 8
 def monte_carlo_tree_search(G, source, target, weight="weight", iterations=1000, exploration_weight=1.414):
     """
     Monte Carlo Tree Search (MCTS) algorithm to find the shortest path in a weighted graph.
@@ -499,7 +509,8 @@ def monte_carlo_tree_search(G, source, target, weight="weight", iterations=1000,
     return path, best_cost
 
 
-def yen_k_shortest_paths(G, source, target, K=3, weight="weight"):
+# 9
+def yen_k_shortest_paths(G, source, target, K, weight="weight"):
     """
     Yen’s K-Shortest Paths Algorithm to find the K shortest paths in a weighted graph.
 
@@ -567,6 +578,7 @@ def yen_k_shortest_paths(G, source, target, K=3, weight="weight"):
     return k_shortest_paths
 
 
+# 10
 def ant_colony_optimization(G, source, target, weight="weight", alpha=1.0, beta=2.0, evaporation_rate=0.5, ant_count=10, iterations=100):
     """
     Ant Colony Optimization (ACO) algorithm to find the shortest path in a weighted graph.
@@ -666,3 +678,63 @@ def ant_colony_optimization(G, source, target, weight="weight", alpha=1.0, beta=
         update_pheromones(ant_paths)
 
     return best_path, best_cost
+
+
+# Function to run an algorithm and return its result and execution time
+def run_algorithm(algorithm_func, G, source, target, weight='weight', iterations=1000, updated_edges=None):
+    # Ensure we copy the graph for each algorithm execution (to avoid shared state issues)
+    G_copy = G.copy()
+
+    # Handle algorithms that need extra parameters
+    if algorithm_func == dynamic_shortest_path and updated_edges:
+        return algorithm_func(G_copy, source, target, weight, updated_edges)
+
+    if algorithm_func == monte_carlo_tree_search:
+        return algorithm_func(G_copy, source, target, weight, iterations)
+
+    if algorithm_func == ant_colony_optimization:
+        return algorithm_func(G_copy, source, target, weight, iterations=iterations)
+
+    if algorithm_func == yen_k_shortest_paths:
+        return algorithm_func(G_copy, source, target, K=1, weight=weight)
+
+    # For others, directly return the result
+    return algorithm_func(G_copy, source, target, weight)
+
+# Parallel execution with joblib
+def parallel_execution(algorithms, G, source, target, weight="weight", updated_edges=None, iterations=1000):
+    results = Parallel(n_jobs=-1)(
+        delayed(run_algorithm)(algorithm_func, G, source, target, weight, iterations, updated_edges)
+        for algorithm_func in algorithms
+    )
+    return results
+
+# Example use case
+def main():
+    # Example graph, you can replace it with your actual graph generation
+    G = nx.gnp_random_graph(10, 0.3)  # Smaller graph for demo purposes
+    source, target = 0, 9  # Define source and target
+
+    # List of algorithms (include your old ones + new ones like D* Lite, A*, MCTS, etc.)
+    algorithms = [
+        dijkstra_search,
+        floyd_warshall_search,
+        bellman_ford_search,
+        bidirectional_search,
+        dynamic_shortest_path,
+        #d_star_lite,   # takes long to process (haven't reached output yet)
+        a_star_search,
+        monte_carlo_tree_search,
+        yen_k_shortest_paths,
+        ant_colony_optimization
+    ]
+
+    # Parallel execution
+    results = parallel_execution(algorithms, G, source, target)
+
+    # Print results
+    for i, result in enumerate(results):
+        print(f"Algorithm {i+1} result: {result}")
+
+if __name__ == "__main__":
+    main()
