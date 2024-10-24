@@ -1,3 +1,6 @@
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.shp filter=lfs diff=lfs merge=lfs -text
 *2024-10-23_16-29-57[[:space:]]graph.gpkg filter=lfs diff=lfs merge=lfs -text
+graphs/graphml/metro_manila_graph.graphml filter=lfs diff=lfs merge=lfs -text
+*graphml filter=lfs diff=lfs merge=lfs -text
+*gpkg filter=lfs diff=lfs merge=lfs -text
