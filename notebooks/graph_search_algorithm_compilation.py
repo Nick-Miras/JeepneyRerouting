@@ -161,12 +161,12 @@ def bellman_ford_search(G, source, target, weight="weight"):
 # 4
 def bidirectional_search(G, source, target, weight="weight"):
     """
-    Bidirectional Search to find the shortest path from source to target in an unweighted graph.
+    Bidirectional Search to find the shortest path from source to target in a weighted graph.
 
     G: networkx graph
     source: start node
     target: goal node
-    weight: unused in bidirectional search, kept for compatibility with the format.
+    weight: edge attribute name for weights (default is "weight").
 
     Returns: list of nodes representing the shortest path from source to target.
     """
@@ -174,49 +174,56 @@ def bidirectional_search(G, source, target, weight="weight"):
     if source == target:
         return [source]
 
-    # Two queues for BFS from source and target
-    forward_queue = deque([[source]])
-    backward_queue = deque([[target]])
+    # Priority queues for Dijkstra-like expansion from source and target
+    forward_queue = [(0, [source])]
+    backward_queue = [(0, [target])]
 
-    # Two sets to track visited nodes from source and target
-    forward_visited = {source: [source]}
-    backward_visited = {target: [target]}
+    # Dictionaries to track the shortest path distances from both directions
+    forward_visited = {source: (0, [source])}
+    backward_visited = {target: (0, [target])}
 
     while forward_queue and backward_queue:
         # Expand from the forward side
         if forward_queue:
-            forward_path = forward_queue.popleft()
+            forward_dist, forward_path = heapq.heappop(forward_queue)
             current_node_forward = forward_path[-1]
 
-            # Explore neighbors of the forward node
+            # Explore neighbors with cumulative weights
             for neighbor in G.neighbors(current_node_forward):
-                if neighbor not in forward_visited:
+                edge_weight = G[current_node_forward][neighbor].get(weight, 1)
+                new_dist = forward_dist + edge_weight
+
+                if neighbor not in forward_visited or new_dist < forward_visited[neighbor][0]:
                     new_path = forward_path + [neighbor]
-                    forward_visited[neighbor] = new_path
-                    forward_queue.append(new_path)
+                    forward_visited[neighbor] = (new_dist, new_path)
+                    heapq.heappush(forward_queue, (new_dist, new_path))
 
                     # Check if we meet the backward search
                     if neighbor in backward_visited:
-                        return new_path[:-1] + backward_visited[neighbor][::-1]
+                        return new_path[:-1] + backward_visited[neighbor][1][::-1]
 
         # Expand from the backward side
         if backward_queue:
-            backward_path = backward_queue.popleft()
+            backward_dist, backward_path = heapq.heappop(backward_queue)
             current_node_backward = backward_path[-1]
 
-            # Explore neighbors of the backward node
+            # Explore neighbors with cumulative weights
             for neighbor in G.neighbors(current_node_backward):
-                if neighbor not in backward_visited:
+                edge_weight = G[current_node_backward][neighbor].get(weight, 1)
+                new_dist = backward_dist + edge_weight
+
+                if neighbor not in backward_visited or new_dist < backward_visited[neighbor][0]:
                     new_path = backward_path + [neighbor]
-                    backward_visited[neighbor] = new_path
-                    backward_queue.append(new_path)
+                    backward_visited[neighbor] = (new_dist, new_path)
+                    heapq.heappush(backward_queue, (new_dist, new_path))
 
                     # Check if we meet the forward search
                     if neighbor in forward_visited:
-                        return forward_visited[neighbor] + backward_visited[neighbor][::-1][1:]
+                        return forward_visited[neighbor][1] + backward_visited[neighbor][1][::-1][1:]
 
     # If no path is found, return None
     return None
+
 
 
 # 5
