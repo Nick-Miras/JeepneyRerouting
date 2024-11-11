@@ -3,8 +3,8 @@ import requests
 import os
 
 
-NC_FILE_LIST = 'nasa_data/subset_GPM_3IMERGDF_07_20241021_040313_.txt'
-DOWNLOAD_DIR = 'nasa_data/precipitation_data'
+NC_FILE_LIST = '../nasa_data/newly_generated_urls.txt'
+DOWNLOAD_DIR = '../nasa_data/precipitation_data'
 
 with open (NC_FILE_LIST, 'r') as f:
     nc_files = f.readlines()
