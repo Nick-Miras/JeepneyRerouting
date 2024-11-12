@@ -267,3 +267,4 @@ cache/
 /graphs/geopackage/2024-10-23_16-29-57 graph.gpkg
 notebooks/sprf/
 spatial_rf_python
+*.grib
