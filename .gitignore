@@ -268,3 +268,4 @@ cache/
 notebooks/sprf/
 spatial_rf_python
 *.grib
+*core*
