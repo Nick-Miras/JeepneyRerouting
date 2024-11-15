@@ -78,7 +78,7 @@ def get_reroute(G_sub, shortest_paths_between_closest_nodes) -> nx.Graph:
     rerouted_sub_graph_lst = []
     for path in shortest_paths_between_closest_nodes:
         rerouted_sub_graph_lst.append(graph_of_area.subgraph(path))
-    return nx.compose(G_sub, nx.compose_all(rerouted_sub_graph_lst))
+    return ox.graph_to_gdfs(nx.compose(G_sub, nx.compose_all(rerouted_sub_graph_lst)), nodes=False)
 
 # G = graph_of_area.copy()
 # G_sub = subgraph.copy()
