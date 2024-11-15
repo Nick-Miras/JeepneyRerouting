@@ -74,7 +74,7 @@ def get_lst_of_rerouted_paths(G, G_sub, deleted_nodes):
     return shortest_paths_between_closest_nodes
 
 
-def get_reroute(G_sub, shortest_paths_between_closest_nodes):
+def get_reroute(G_sub, shortest_paths_between_closest_nodes) -> nx.Graph:
     rerouted_sub_graph_lst = []
     for path in shortest_paths_between_closest_nodes:
         rerouted_sub_graph_lst.append(graph_of_area.subgraph(path))
